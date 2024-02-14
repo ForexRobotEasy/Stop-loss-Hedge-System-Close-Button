@@ -1,0 +1,68 @@
+
+// Author: Forex Robot Easy Team
+// Website: forexroboteasy.com
+
+// Include necessary libraries and functions
+#include <Trade\Trade.mqh>
+#include <Trade\PositionInfo.mqh>
+
+// Define constants
+const int HEDGE_PIPS = 20; // Number of pips to trigger hedge trade
+
+// Initialize trade and position objects
+CTrade trade;
+CPositionInfo position;
+
+// Function to check if a hedge trade is needed
+void CheckHedgeTrade()
+{
+   // Get current position information
+   if(!position.Refresh())
+      return;
+
+   // Check if position is long and below the hedge pips threshold
+   if(position.PositionType() == POSITION_TYPE_BUY && position.Profit() < -HEDGE_PIPS)
+   {
+      // Open a sell trade of the same lot size
+      trade.Sell(position.Volume());
+   }
+}
+
+// Entry point of the expert advisor
+int OnInit()
+{
+   // Initialize trade and position objects
+   trade.SetDeviationInPips(5);
+   position.Select('EURUSD');
+
+   return(INIT_SUCCEEDED);
+}
+
+// Main loop of the expert advisor
+void OnTick()
+{
+   // Check if a hedge trade is needed
+   CheckHedgeTrade();
+}
+
+// Handle unexpected situations or errors
+void OnTradeError(const int error)
+{
+   Print('Trade error occurred: ', error);
+}
+
+// Optimize performance by limiting the execution frequency
+void OnTimer()
+{
+   // Check if a hedge trade is needed
+   CheckHedgeTrade();
+}
+
+// Perform necessary cleanup before the expert advisor is unloaded
+void OnDeinit(const int reason)
+{
+   // Close any open trades
+   trade.CloseAll();
+
+   Print('Expert advisor unloaded');
+}
